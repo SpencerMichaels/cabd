@@ -1,7 +1,6 @@
 import re
 
 from book import Book, Chapter
-from soup import get_soup
 
 import utils
 
@@ -15,13 +14,13 @@ def get_chapter(li):
   title = li.find('div', {'class': 'psList'}).text
 
   dl_page_url = li.find_all('a', {'class': 'button'})[1]['href']
-  soup = get_soup('http:' + dl_page_url)
+  soup = utils.get_soup('http:' + dl_page_url)
   url = soup.find('div', {'class': 'downsubmit'}).a['href']
 
   return Chapter(title=title, url=url)
 
 def get_book(url, num_threads):
-  soup = get_soup(url.geturl())
+  soup = utils.get_soup(url.geturl())
 
   title = soup.find('span', {'class': 'a-btn-text'}).text
   art_url = soup.find('div', {'class': 'contDetail'}) \

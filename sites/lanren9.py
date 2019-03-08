@@ -3,7 +3,6 @@ import re
 from urllib.request import urlopen
 
 from book import Book, Chapter
-from soup import get_soup
 
 import utils
 
@@ -38,7 +37,7 @@ def get_chapters_playdata(raw_url):
     return [ decode_entry(e) for e in entries ]
 
 def get_book(raw_url):
-  soup = get_soup(raw_url)
+  soup = utils.get_soup(raw_url)
 
   art = soup.find('div', {'class': 'detail-pic'}).img
   title = art['alt']
@@ -48,7 +47,7 @@ def get_book(raw_url):
 
   base = '/'.join(raw_url.split('/', 3)[:3])
   first_chapter_href = soup.find(id='player_1').find('a')['href']
-  first_chapter_soup = get_soup(base + first_chapter_href)
+  first_chapter_soup = utils.get_soup(base + first_chapter_href)
 
   playdata_path = first_chapter_soup.find(id='bo') \
                                .find('script', {'type': 'text/javascript'})['src']
@@ -60,20 +59,16 @@ def get_book(raw_url):
   if chapters_info[0][2] == 'tc':
     chapters = utils.do_multi(
         lambda info: Chapter(title=info[0], url=get_chapter_url(info[1])),
-        chapters_info[0:3],
+        chapters_info,
         lambda total, chapter: utils.print_progress(len(chapters_info), total, chapter.title, 1))
   else:
     chapters = [ Chapter(title=info[0], url=info[1]) for info in chapters_info ]
-
-  print("CHAPTERS:")
-  for chapter in chapters:
-    print(chapter.title + ': ' + chapter.url)
 
   return Book(title=title, art_url=art_url, chapters=chapters)
 
 def get_books_for_author(url):
   raw_url = url.geturl()
-  first_page_soup = get_soup(raw_url)
+  first_page_soup = utils.get_soup(raw_url)
   author = first_page_soup.find('div', {'class': 'detail-info'}).h2.text
 
   print("Fetching books for author \"%s\"..." % (author))
@@ -92,7 +87,7 @@ def get_books_for_author(url):
       page_url = raw_url \
           if pagenum == 1 \
           else raw_url.replace('.html', '-%d.html' % (pagenum))
-    hrefs += get_hrefs(get_soup(page_url))
+    hrefs += get_hrefs(utils.get_soup(page_url))
 
   base = '%s://%s' % (url.scheme, url.netloc)
 

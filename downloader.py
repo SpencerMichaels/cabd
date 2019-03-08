@@ -1,12 +1,14 @@
 from multiprocessing.pool import ThreadPool
 import os
-import requests
 import time
 from urllib.parse import urlparse
+
+from fake_useragent import UserAgent
 
 import utils
 
 __all__ = ['download_books']
+USER_AGENT = UserAgent().chrome
 
 def download_chapter(arg):
   (path, chapter) = arg
@@ -15,13 +17,10 @@ def download_chapter(arg):
   ext = url.path.split('.')[-1]
   fqp = '%s/%s.%s' % (path, chapter.title, ext)
 
-  r = requests.get(chapter.url, stream=True)
-  if r.status_code == 200:
-    with open(fqp, 'wb') as f:
-      for chunk in r.iter_content(chunk_size=0x100000):
-        f.write(chunk)
-  else:
-    print('Failed to download (%d): %s' % (r.status_code, chapter.url))
+  r = utils.get(chapter.url, stream=True)
+  with open(fqp, 'wb') as f:
+    for chunk in r.iter_content(chunk_size=0x100000):
+      f.write(chunk)
 
   return chapter
 

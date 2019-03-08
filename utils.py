@@ -2,6 +2,19 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 import sys
 
+from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
+import requests
+
+USER_AGENT = UserAgent().chrome
+
+def get(url, stream=False):
+  return requests.get(url, headers={ 'User-Agent': USER_AGENT }, stream=stream)
+
+def get_soup(url):
+  with get(url) as response:
+    return BeautifulSoup(response.content, 'html5lib')
+
 def do_multi(func, args, on_progress, num_threads=cpu_count()):
   class _func():
     def __init__(self):
