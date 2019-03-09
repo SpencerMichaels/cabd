@@ -1,48 +1,21 @@
-from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
+import aiohttp
+import asyncio
+import os
 import sys
 
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 import requests
 
-USER_AGENT = UserAgent().chrome
+async def get_soup(session, url):
+  async with session.get(url) as response:
+    content = await response.content.read()
+    return BeautifulSoup(content, 'html5lib')
 
-def get(url, stream=False):
-  return requests.get(url, headers={ 'User-Agent': USER_AGENT }, stream=stream)
-
-def get_soup(url):
-  with get(url) as response:
-    return BeautifulSoup(response.content, 'html5lib')
-
-def do_multi(func, args, on_progress, num_threads=cpu_count()):
-  class _func():
-    def __init__(self):
-      self.total = 0
-
-    def __call__(self, arg):
-      result = func(arg)
-      self.total += 1
-      if on_progress:
-        on_progress(self.total, result)
-      return result
-
-  pool = ThreadPool(num_threads)
-  result = pool.map(_func(), args)
-  pool.close()
-  pool.join()
-
-  return result
-
-def print_progress(num_total, num_current, message, indent_level=0, write_over=False):
-  def overwrite(s):
-    sys.stdout.write('\r' + s)
-    sys.stdout.flush()
-
-  write = overwrite \
-            if write_over \
-            else print
-  write('  ' * indent_level + '[%d%%]\t%s' % ((num_current*100)/num_total, message))
-
-  if (num_total == num_current and write_over):
-    print('')
+async def get_to_file(session, url, filename=None):
+  async with session.get(url) as response:
+    filename = filename if filename else os.path.basename(url)
+    with open(filename, 'wb') as handle:
+      async for chunk, _ in response.content.iter_chunks():
+        handle.write(chunk)
+      print(filename)
+    return await response.release()

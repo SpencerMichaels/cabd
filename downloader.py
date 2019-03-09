@@ -1,6 +1,6 @@
-from multiprocessing.pool import ThreadPool
+import asyncio
+
 import os
-import time
 from urllib.parse import urlparse
 
 from fake_useragent import UserAgent
@@ -10,28 +10,23 @@ import utils
 __all__ = ['download_books']
 USER_AGENT = UserAgent().chrome
 
-def download_chapter(arg):
-  (path, chapter) = arg
+async def download_chapter(session, directory, chapter):
+  print(chapter.title)
 
   url = urlparse(chapter.url, scheme='http')
   ext = url.path.split('.')[-1]
-  fqp = '%s/%s.%s' % (path, chapter.title, ext)
+  path = '%s/%s.%s' % (directory, chapter.title, ext)
 
-  r = utils.get(chapter.url, stream=True)
-  with open(fqp, 'wb') as f:
-    for chunk in r.iter_content(chunk_size=0x100000):
-      f.write(chunk)
+  await utils.get_to_file(session, chapter.url, path)
 
-  return chapter
-
-def download_book(book, num_threads):
+async def download_book(session, book):
   os.makedirs(book.title, exist_ok=True)
 
-  print('\nDownloading \"%s\"...' % (book.title))
-  chapters = [ (book.title, chapter) for chapter in book.chapters ]
-  utils.do_multi(download_chapter, chapters,
-           lambda total, chapter: utils.print_progress(len(book.chapters), total, chapter.title), num_threads)
+  tasks = map(lambda chapter: download_chapter(session, book.title, chapter),
+              book.chapters)
+  await asyncio.gather(*tasks)
 
-def download_books(books, num_threads):
-  for book in books:
-    download_book(book, num_threads)
+
+async def download_books(session, books):
+  tasks = map(lambda book: download_book(session, book), books)
+  await asyncio.gather(*tasks)
