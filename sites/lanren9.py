@@ -77,7 +77,6 @@ async def get_book(session, raw_url):
     url = await get_chapter_url(session, playdata.ref) \
             if playdata.fmt == 'tc' \
             else playdata.ref
-    print(url)
     return Chapter(title=playdata.title, url=url)
 
   return Book(title=title, art_url=art_url,

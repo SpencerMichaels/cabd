@@ -23,18 +23,20 @@ def make_parser():
       epilog='Supported sites: ' + ', '.join(make_pretty_site_list())) 
   parser.add_argument('url', type=str,
       help='The URL of the audiobook\'s main page.')
-  #parser.add_argument('-t', '--threads', type=int, default=cpu_count(),
-  #    help='The number of threads to use for multi-threaded downloads. Defaults to %d.')
+  parser.add_argument('-m', '--max-conns', type=int, dest='limit', default=100,
+      help='The maximum number of concurrent connections. Defaults to 100.')
   return parser
 
 def find(l, pred):
   return next((e for e in l if pred(e)), None)
 
-async def main(loop):
-  headers = { 'User-Agent': UserAgent().chrome }
-  async with aiohttp.ClientSession(loop=loop, headers=headers) as session:
-    books = await site.get(session, url)
-    await download_books(session, books)
+async def main(loop, limit):
+  async with aiohttp.ClientSession(
+      connector = aiohttp.TCPConnector(limit=limit),
+      headers = { 'User-Agent': UserAgent().chrome },
+      loop=loop) as session:
+        books = await site.get(session, url)
+        await download_books(session, books)
 
 if __name__ == '__main__':
   parser = make_parser()
@@ -51,4 +53,4 @@ if __name__ == '__main__':
 
   # Use a fake user agent to fool certain sites into presenting normal content
   loop = asyncio.get_event_loop()
-  loop.run_until_complete(main(loop))
+  loop.run_until_complete(main(loop, args.limit))
