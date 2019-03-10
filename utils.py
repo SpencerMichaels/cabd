@@ -17,5 +17,4 @@ async def get_to_file(session, url, filename=None):
     with open(filename, 'wb') as handle:
       async for chunk, _ in response.content.iter_chunks():
         handle.write(chunk)
-      print(filename)
     return await response.release()

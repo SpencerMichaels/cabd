@@ -44,6 +44,12 @@ async def get_chapters_playdata(session, raw_url):
       ref_decoder = 'unicode_escape' \
           if sections[0].startswith(b'\\') \
           else 'utf-8'
+
+      # Type may not be specified; if so, add a blank one
+      # TODO: is blank OK?
+      if len(sections) < 3:
+        sections.append(b'')
+
       return PlayData(sections[0].decode(ref_decoder),
                       *map(utf8_decode, sections[1:]))
 
@@ -74,9 +80,12 @@ async def get_book(session, raw_url):
   # Most playdata gives the audio URL directly, but a few give a 'tc' ID that
   # must be submitted to tc.php to look up the audio URL.
   async def playdata_to_chapter(playdata):
-    url = await get_chapter_url(session, playdata.ref) \
-            if playdata.fmt == 'tc' \
-            else playdata.ref
+    print('\n' + playdata.fmt + ' ' + playdata.ref)
+    # TODO: There are lots of other formats I need to handle... see play.js
+    if playdata.fmt == 'tc':
+      url = await get_chapter_url(session, playdata.ref)
+    else:
+      url = playdata.ref
     return Chapter(title=playdata.title, url=url)
 
   return Book(title=title, art_url=art_url,

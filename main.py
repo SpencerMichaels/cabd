@@ -35,6 +35,7 @@ async def main(loop, limit):
       connector = aiohttp.TCPConnector(limit=limit),
       headers = { 'User-Agent': UserAgent().chrome },
       loop=loop) as session:
+        print('Fetching metadata...')
         books = await site.get(session, url)
         await download_books(session, books)
 

@@ -11,8 +11,6 @@ __all__ = ['download_books']
 USER_AGENT = UserAgent().chrome
 
 async def download_chapter(session, directory, chapter):
-  print(chapter.title)
-
   url = urlparse(chapter.url, scheme='http')
   ext = url.path.split('.')[-1]
   path = '%s/%s.%s' % (directory, chapter.title, ext)
@@ -26,7 +24,7 @@ async def download_book(session, book):
               book.chapters)
   await asyncio.gather(*tasks)
 
-
 async def download_books(session, books):
+  print('Downloading...')
   tasks = map(lambda book: download_book(session, book), books)
   await asyncio.gather(*tasks)
