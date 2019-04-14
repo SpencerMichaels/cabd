@@ -30,11 +30,14 @@ def make_parser():
 def find(l, pred):
   return next((e for e in l if pred(e)), None)
 
+import utils
+
 async def main(loop, limit):
   async with aiohttp.ClientSession(
       connector = aiohttp.TCPConnector(limit=limit),
       headers = { 'User-Agent': UserAgent().chrome },
       loop=loop) as session:
+
         print('Fetching metadata...')
         books = await site.get(session, url)
         await download_books(session, books)
