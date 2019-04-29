@@ -28,7 +28,7 @@ async def download_chapter(session, directory, chapter):
         print('  ERR: Giving up')
         return
       tries += 1
-  print('Download of %s succeeded!' % (chapter.url))
+  print('Download of %s succeeded!' % (chapter.title))
 
 async def download_book(session, book):
   os.makedirs(book.title, exist_ok=True)

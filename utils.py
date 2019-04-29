@@ -4,7 +4,13 @@ import os
 import sys
 
 from bs4 import BeautifulSoup
+import json
 import requests
+
+async def get_json(session, url):
+  async with session.get(url) as response:
+    content = await response.content.read()
+    return json.loads(content)
 
 async def get_soup(session, url):
   async with session.get(url) as response:

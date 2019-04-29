@@ -45,8 +45,6 @@ async def get_book(session, raw_url):
   tasks = map(lambda cid: get_chapter(session, book_id, cid), chapter_ids)
   chapters = await asyncio.gather(*tasks)
 
-  print(title)
-
   return Book(title=title, art_url=art_url, chapters=chapters)
 
 async def get_books_for_search(session, raw_url):
